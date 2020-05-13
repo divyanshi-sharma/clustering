@@ -43,7 +43,6 @@ def test_kmeans_on_generated():
                         distance_to_true_means.append(
                             np.abs(_means - actual_means).sum()
                         )
-                    
                     assert (min(distance_to_true_means) < 1e-1)
 
                     # predict and calculate adjusted mutual info
