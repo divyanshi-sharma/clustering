@@ -47,9 +47,6 @@ class KMeans():
         for i in range(self.n_clusters):
             centroids = np.append(centroids, (features[sample[i], :]))
         new_means = centroids.reshape(self.n_clusters, features.shape[1])
-        means = new_means
-
-        old_means = np.zeros((self.n_clusters, features.shape[1]))
         max_iters = 10
 
         def update_labels(mean, feat):

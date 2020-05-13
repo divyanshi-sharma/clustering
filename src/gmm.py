@@ -203,7 +203,11 @@ class GMM():
         Returns:
             np.ndarray -- log likelihoods of each feature given a Gaussian.
         """
-        raise NotImplementedError()
+        log_mean = self.means[k_idx]
+        log_var = self.covariances[k_idx]
+        logpdf = multivariate_normal.logpdf(features, log_mean, log_var)
+        log_like = np.log(self.mixing_weights[k_idx]) + logpdf
+        return log_like
 
     def _overall_log_likelihood(self, features):
         denom = [
