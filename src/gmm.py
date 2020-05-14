@@ -126,7 +126,12 @@ class GMM():
             np.ndarray -- Posterior probabilities to each Gaussian (shape is
                 (features.shape[0], self.n_clusters))
         """
-        raise NotImplementedError()
+        estep = np.array([])
+        for i in range(self.n_clusters):
+            estep = np.append(estep, self._posterior(features, i))
+        estep = estep.reshape(self.n_clusters, features.shape[0])
+
+        return estep.transpose()
 
     def _m_step(self, features, assignments):
         """
@@ -155,7 +160,30 @@ class GMM():
             covariances -- Updated covariances
             mixing_weights -- Updated mixing weights
         """
-        raise NotImplementedError()
+        means = np.zeros((self.n_clusters, features.shape[1]))
+        variance = np.zeros((self.n_clusters, features.shape[1]))
+        sums = np.sum(assignments, axis=0)
+
+        # update means
+        for j in range(self.n_clusters):
+            for i in range(features.shape[0]):
+                means[j, :] += np.dot(assignments[i, j], features[i, :])
+            means[j, :] = np.divide(means[j,:], sums[j])
+        self.means = means
+
+        # update covariances
+        for j in range(self.n_clusters):
+            for i in range(features.shape[0]):
+                diff = (features[i, :] - self.means[j, :])
+                variance[j, :] += assignments[i, j] * np.square(diff)
+            variance[j, :] = np.divide(variance[j, :], sums[j])
+        self.covariances = variance
+
+
+        # update mixing weights
+        self.mixing_weights = np.divide(sums,features.shape[0])
+
+        return self.means, self.covariances, self.mixing_weights
 
     def _init_covariance(self, n_features):
         """
@@ -203,10 +231,11 @@ class GMM():
         Returns:
             np.ndarray -- log likelihoods of each feature given a Gaussian.
         """
-        log_mean = self.means[k_idx]
-        log_var = self.covariances[k_idx]
-        logpdf = multivariate_normal.logpdf(features, log_mean, log_var)
+        l_mean = self.means[k_idx]
+        l_var = self.covariances[k_idx]
+        logpdf = multivariate_normal.logpdf(features, l_mean, l_var)
         log_like = np.log(self.mixing_weights[k_idx]) + logpdf
+
         return log_like
 
     def _overall_log_likelihood(self, features):
